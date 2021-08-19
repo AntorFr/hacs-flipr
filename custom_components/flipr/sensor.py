@@ -8,7 +8,10 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from . import FliprEntity
-from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN, MANUFACTURER, NAME
+
+from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, NAME, FliprType, FliprResult
+import logging
+_LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
     "chlorine": {
@@ -43,11 +46,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
+    flipr_ids = [device.id for device in coordinator.data
+                 if device.type == FliprType.flipr]
+
     sensors_list = []
-    for sensor in SENSORS:
-        sensors_list.append(
-            FliprSensor(coordinator, config_entry.data[CONF_FLIPR_ID], sensor)
-        )
+    for flipr_id in flipr_ids:
+        for sensor in SENSORS:
+            sensors_list.append(FliprSensor(coordinator, flipr_id, sensor))
 
     async_add_entities(sensors_list, True)
 
@@ -60,7 +65,6 @@ class FliprSensor(FliprEntity, Entity):
         """Define device information global to entities."""
         return {
             "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.flipr_id)
             },
             "name": NAME,
@@ -75,7 +79,7 @@ class FliprSensor(FliprEntity, Entity):
     @property
     def state(self):
         """State of the sensor."""
-        return self.coordinator.data[self.info_type]
+        return self.coordinator.device(self.flipr_id).data[self.info_type]
 
     @property
     def device_class(self):
