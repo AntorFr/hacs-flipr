@@ -3,7 +3,7 @@
   "name": "Flipr",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flipr",
-  "version": "1.2",
+  "version": "1.3",
   "requirements": [
     "flipr-api==1.4.2",
     "pycryptodome==3.15.0"
